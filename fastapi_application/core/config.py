@@ -10,8 +10,17 @@ class RunConfig(BaseModel):
     port: int = 8000
 
 
+class Alphabet(BaseModel):
+    eng_idx: tuple[str] = tuple("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    eng_letters: dict[str, int] = {letter: index for index, letter in enumerate(eng_idx)}
+
+    rus_idx: tuple[str] = tuple("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ")
+    rus_letters: dict[str, int] = {letter: index for index, letter in enumerate(rus_idx)}
+
+
 class Settings(BaseModel):
     run: RunConfig = RunConfig()
+    alphabet: Alphabet = Alphabet()
 
 
 settings = Settings()
