@@ -1,12 +1,30 @@
+from fastapi import HTTPException, status
+
 from core import eng_letters, eng_idx, rus_letters, rus_idx
+
+
+def keyword_to_figure(keyword: str) -> list[int]:
+    shift_list = []
+    for sym in keyword:
+        if sym.upper() in eng_letters:
+            shift_list.append(eng_letters.get(sym.upper()))
+        elif sym.upper() in rus_letters:
+            shift_list.append(rus_letters.get(sym.upper()))
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="В ключевом слове могут быть только английские и русские буквы",
+            )
+    return shift_list
 
 
 def encrypt(text: str, keyword: str, decrypt: bool = False) -> str:
     encoded_text = []
+    shift_list = keyword_to_figure(keyword)
     key_index = 0
     for sym in text:
         if sym.upper() in eng_letters:
-            shift = eng_letters.get(keyword[key_index % len(keyword)].upper())
+            shift = shift_list[key_index % len(shift_list)]
 
             if decrypt:
                 shift = -shift
@@ -16,8 +34,7 @@ def encrypt(text: str, keyword: str, decrypt: bool = False) -> str:
             key_index += 1
 
         elif sym.upper() in rus_letters:
-            shift = eng_letters.get(keyword[key_index % len(keyword)].upper())
-
+            shift = shift_list[key_index % len(shift_list)]
             if decrypt:
                 shift = -shift
 
