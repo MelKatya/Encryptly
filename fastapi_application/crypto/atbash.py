@@ -2,6 +2,16 @@ from core import eng_letters, eng_idx, rus_letters, rus_idx
 
 
 def crypt(text: str) -> str:
+    """
+    Шифрует и расшифровывает текст алгоритмом Атбаш (обратный алфавит).
+
+    Args:
+        text (str): Текст для шифрования/расшифрования.
+            Поддерживаются латиница и кириллица.
+
+    Returns:
+        str: Зашифрованный или расшифрованный текст. Регистр букв сохраняется.
+    """
     encoded_text = []
     for sym in text:
         if sym.upper() in eng_letters:
@@ -14,5 +24,3 @@ def crypt(text: str) -> str:
             encoded_text.append(sym)
 
     return "".join(encoded_text)
-
-
