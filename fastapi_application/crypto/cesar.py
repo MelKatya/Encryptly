@@ -2,6 +2,16 @@ from core import eng_letters, eng_idx, rus_letters, rus_idx
 
 
 def encrypt(text: str, shift: int = 5) -> str:
+    """
+    Шифрует текст алгоритмом Цезаря.
+
+    Args:
+        text (str): Текст для шифрования. Поддерживаются латиница и кириллица.
+        shift (int): Сдвиг букв в алфавите. По умолчанию 5.
+
+    Returns:
+        str: Зашифрованный текст. Регистр букв сохраняется.
+    """
     encoded_text = []
     for sym in text:
         if sym.upper() in eng_letters:
@@ -19,4 +29,14 @@ def encrypt(text: str, shift: int = 5) -> str:
 
 
 def decrypt(encoded_text: str, shift: int = 5) -> str:
+    """
+    Расшифровывает текст, зашифрованный алгоритмом Цезаря
+
+    Args:
+        encoded_text (str): Текст для расшифрования. Поддерживаются латиница и кириллица.
+        shift (int): Сдвиг букв в алфавите. По умолчанию 5.
+
+    Returns:
+        str: Расшифрованный текст. Регистр букв сохраняется.
+    """
     return encrypt(text=encoded_text, shift=-shift)
