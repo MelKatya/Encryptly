@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 ValidOperation = Literal["encrypt", "decrypt"]
+ValidLanguage = Literal["eng", "rus"]
 
 
 class RunConfig(BaseModel):
