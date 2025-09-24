@@ -36,3 +36,20 @@ def encrypt(text: str, public_pem: str) -> str:
 
     return base64.b64encode(ciphertext).decode('utf-8')
 
+
+def decrypt(encoded_text: str, private_pem: str) -> str:
+    private_key = serialization.load_pem_private_key(
+        private_pem.encode(),
+        password=None,
+    )
+
+    ciphertext_bytes = base64.b64decode(encoded_text)
+    plaintext = private_key.decrypt(
+        ciphertext_bytes,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return plaintext.decode()
