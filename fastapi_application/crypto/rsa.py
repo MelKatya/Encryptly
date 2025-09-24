@@ -21,3 +21,18 @@ def create_keys(key_size: int = 2048) -> tuple[str, str]:
     return private_pem.decode(), public_pem.decode()
 
 
+def encrypt(text: str, public_pem: str) -> str:
+    public_key = serialization.load_pem_public_key(
+        public_pem.encode(),
+    )
+    ciphertext = public_key.encrypt(
+        text.encode(),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+
+    return base64.b64encode(ciphertext).decode('utf-8')
+
