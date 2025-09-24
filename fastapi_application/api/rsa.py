@@ -16,3 +16,9 @@ def generate_keys(data: RsaGenerateKey) -> RsaKeyRead:
 def rsa_encrypt(data: RsaEncrypt) -> str:
     encrypted_text = encrypt(text=data.text, public_pem=data.public_key)
     return encrypted_text
+
+
+@router.post("/decrypt")
+def rsa_decrypt(data: RsaDecrypt) -> str:
+    decrypted_text = decrypt(encoded_text=data.text, private_pem=data.private_key)
+    return decrypted_text
