@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from core.schemas.rsa import RsaGenerateKey, RsaKeyRead
+from core.schemas.rsa import RsaGenerateKey, RsaKeyRead, RsaEncrypt, RsaDecrypt
 from crypto.rsa import create_keys, encrypt, decrypt
 
 router = APIRouter()
