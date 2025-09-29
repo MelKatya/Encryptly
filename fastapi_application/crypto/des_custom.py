@@ -76,10 +76,13 @@ for idx in range(0, len(text), 8):
         rest = 8 - len(block)
         block += bytes([rest]) * rest
         block_to_int = int.from_bytes(block)
-        my_blocks.append(format(block_to_int, '064b'))
         # my_blocks.append(format(block_to_int, '064b'))
         my_blocks.append([int(block) for block in format(block_to_int, '064b')])
 
+# create key 64 bit
+key = int.from_bytes(os.urandom(7), 'big')
+key_to_bit = format(key, '056b') + format(0, '08b')
+key_bits = [int(b) for b in key_to_bit]
 
 print(my_blocks)
 
