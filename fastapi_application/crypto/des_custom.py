@@ -96,8 +96,8 @@ new_key = c1 + d1
 # ready key for xor right part
 key1 = [new_key[pos - 1] for pos in PC2]
 
-key = int.from_bytes(os.urandom(7))
-key_to_bit = format(key, '056b')
+
+first_shift = [[block[pos - 1] for pos in IP] for block in my_blocks]
 
 
 
