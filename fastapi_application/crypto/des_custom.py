@@ -84,7 +84,17 @@ key = int.from_bytes(os.urandom(7), 'big')
 key_to_bit = format(key, '056b') + format(0, '08b')
 key_bits = [int(b) for b in key_to_bit]
 
-print(my_blocks)
+key_to_pc1 = [key_to_bit[pos - 1] for pos in PC1]
+c0 = key_to_pc1[:28]
+d0 = key_to_pc1[28:]
+
+# first round
+shift = 1
+c1 = c0[shift:] + c0[:shift]
+d1 = d0[shift:] + d0[:shift]
+new_key = c1 + d1
+# ready key for xor right part
+key1 = [new_key[pos - 1] for pos in PC2]
 
 key = int.from_bytes(os.urandom(7))
 key_to_bit = format(key, '056b')
