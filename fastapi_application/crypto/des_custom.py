@@ -71,12 +71,15 @@ for idx in range(0, len(text), 8):
     block = text[idx:idx + 8]
     if len(block) == 8:
         block_to_int = int.from_bytes(block)
-        my_blocks.append(format(block_to_int, '064b'))
+        my_blocks.append([int(block) for block in format(block_to_int, '064b')])
     else:
         rest = 8 - len(block)
         block += bytes([rest]) * rest
         block_to_int = int.from_bytes(block)
         my_blocks.append(format(block_to_int, '064b'))
+        # my_blocks.append(format(block_to_int, '064b'))
+        my_blocks.append([int(block) for block in format(block_to_int, '064b')])
+
 
 print(my_blocks)
 
