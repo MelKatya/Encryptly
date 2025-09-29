@@ -105,7 +105,7 @@ key = int.from_bytes(os.urandom(7), 'big')
 key_to_bit = format(key, '056b') + format(0, '08b')
 key_bits = [int(b) for b in key_to_bit]
 
-key_to_pc1 = [key_to_bit[pos - 1] for pos in PC1]
+key_to_pc1 = [key_to_bit[pos - 1] for pos in TABLES["PC"]]
 c0 = key_to_pc1[:28]
 d0 = key_to_pc1[28:]
 
@@ -115,10 +115,10 @@ c1 = c0[shift:] + c0[:shift]
 d1 = d0[shift:] + d0[:shift]
 new_key = c1 + d1
 # ready key for xor right part
-key1 = [new_key[pos - 1] for pos in PC2]
+key1 = [new_key[pos - 1] for pos in TABLES["PC2"]]
 
 
-first_shift = [[block[pos - 1] for pos in IP] for block in my_blocks]
+first_shift = [[block[pos - 1] for pos in TABLES["IP"]] for block in my_blocks]
 
 
 
