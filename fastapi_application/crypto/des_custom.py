@@ -13,6 +13,7 @@ TABLES = {
         61, 53, 45, 37, 29, 21, 13, 5,
         63, 55, 47, 39, 31, 23, 15, 7
     ],
+    "SHIFTS_KEY": [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1],
     "PC1": [
         57,49,41,33,25,17,9,
         1,58,50,42,34,26,18,
@@ -106,68 +107,96 @@ TABLES = {
 }
 
 
-SHIFTS_KEY = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
 
 
-text = "мама мыла раму, раму мыла мама, мама мыла раму"
-text = text.encode()
+def create_key() -> list[int]:
+    # create key 64 bit
+    key = int.from_bytes(os.urandom(7), 'big')
+    key_to_bit = format(key, '056b') + format(0, '08b')
+    return [int(bit) for bit in key_to_bit]
 
 
-# create key 64 bit
-key = int.from_bytes(os.urandom(7), 'big')
-key_to_bit = format(key, '056b') + format(0, '08b')
-key_bits = [int(b) for b in key_to_bit]
+def text_to_bit_blocks(text: str) -> list[list[int]]:
+    encoded_text = text.encode()
+    bit_blocks = []
 
-key_to_pc1 = [key_to_bit[pos - 1] for pos in TABLES["PC1"]]
-c0 = key_to_pc1[:28]
-d0 = key_to_pc1[28:]
+    for idx in range(0, len(encoded_text), 8):
+        block = encoded_text[idx:idx + 8]
+        if len(block) == 8:
+            block_to_int = int.from_bytes(encoded_text)
+            bit_blocks.append([int(block) for block in format(block_to_int, '064b')])
+        else:
+            rest = 8 - len(block)
+            block += bytes([rest]) * rest
+            block_to_int = int.from_bytes(encoded_text)
+            bit_blocks.append([int(block) for block in format(block_to_int, '064b')])
 
-# first round key
-shift = 1
-c1 = c0[shift:] + c0[:shift]
-d1 = d0[shift:] + d0[:shift]
-new_key = c1 + d1
-# ready key for xor right part
-key1 = [int(new_key[pos - 1]) for pos in TABLES["PC2"]]
-
-my_blocks = []
-
-for idx in range(0, len(text), 8):
-    block = text[idx:idx + 8]
-    if len(block) == 8:
-        block_to_int = int.from_bytes(block)
-        my_blocks.append([int(block) for block in format(block_to_int, '064b')])
-    else:
-        rest = 8 - len(block)
-        block += bytes([rest]) * rest
-        block_to_int = int.from_bytes(block)
-        # my_blocks.append(format(block_to_int, '064b'))
-        my_blocks.append([int(block) for block in format(block_to_int, '064b')])
+    return bit_blocks
 
 
-first_shift = [[block[pos - 1] for pos in TABLES["IP"]] for block in my_blocks]
+def get_key_round(c0: list[int], d0: list[int], shift: int) -> list[int]:
+    c1 = c0[shift:] + c0[:shift]
+    d1 = d0[shift:] + d0[:shift]
+    new_key = c1 + d1
+    # ready key for xor right part
+    return [new_key[pos - 1] for pos in TABLES["PC2"]]
 
 
-# first round block
-new_blocks = []
-for block in first_shift:
-    Li_1 = block[:32]
-    Ri_1 = block[32:]
+def f_func(R_i_last: list[int], key_i: list[int]) -> list[int]:
+    R_by_e = [R_i_last[pos - 1] for pos in TABLES["E"]]
+    f_i = [r ^ k for r, k in zip(R_by_e, key_i)]
 
-    R_by_e = [Ri_1[pos - 1] for pos in TABLES["E"]]
-    fi = [r ^ k for r, k in zip(R_by_e, key1)]
-
-    sbox_input = [fi[i:i+6] for i in range(0, 48, 6)]
+    sbox_input = [f_i[i:i + 6] for i in range(0, 48, 6)]
     sbox_output = []
     for idx, bits in enumerate(sbox_input):
         row = int(str(bits[0]) + str(bits[5]), 2)
-        col = int("".join(map(str,bits[1:5])), 2)
+        col = int("".join(map(str, bits[1:5])), 2)
         val = TABLES["S"][idx + 1][row][col]
         sbox_output.extend([int(bit) for bit in format(val, '04b')])
 
-    fi_by_P = [sbox_output[pos - 1] for pos in TABLES["P"]]
+    return [sbox_output[pos - 1] for pos in TABLES["P"]]
 
-    Li = Ri_1
-    Ri = [r ^ k for r, k in zip(Li_1, fi_by_P)]
-    new_blocks.append(Li + Ri)
 
+def get_blocks_round(first_shift, key_i):
+    new_blocks = []
+    for block in first_shift:
+        L_i_last = block[:32]
+        R_i_last = block[32:]
+
+        fi_by_P = f_func(R_i_last=R_i_last, key_i=key_i)
+
+        L_i = R_i_last
+        R_i = [r ^ k for r, k in zip(L_i_last, fi_by_P)]
+        new_blocks.append(L_i + R_i)
+
+    return new_blocks
+
+
+def encrypt(text: str, key: list[int]):
+    bit_blocks = text_to_bit_blocks(text=text)
+
+    first_shift = [[block[pos - 1] for pos in TABLES["IP"]] for block in bit_blocks]
+
+    key_to_pc1 = [int(key[pos - 1]) for pos in TABLES["PC1"]]
+    c0 = key_to_pc1[:28]
+    d0 = key_to_pc1[28:]
+
+    shift = 0
+    encrypted_blocks = None
+    for round in range(16):
+        shift += TABLES["SHIFTS_KEY"][round]
+        print(shift)
+        key_i = get_key_round(c0=c0, d0=d0, shift=shift)
+
+        # first round block
+        encrypted_blocks = get_blocks_round(encrypted_blocks,key_i)
+
+    return encrypted_blocks
+
+
+
+text = "мама мыла раму, раму мыла мама, мама мыла раму"
+
+key = create_key()
+
+encrypt(text, key)
