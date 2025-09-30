@@ -112,6 +112,24 @@ SHIFTS_KEY = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
 text = "мама мыла раму, раму мыла мама, мама мыла раму"
 text = text.encode()
 
+
+# create key 64 bit
+key = int.from_bytes(os.urandom(7), 'big')
+key_to_bit = format(key, '056b') + format(0, '08b')
+key_bits = [int(b) for b in key_to_bit]
+
+key_to_pc1 = [key_to_bit[pos - 1] for pos in TABLES["PC1"]]
+c0 = key_to_pc1[:28]
+d0 = key_to_pc1[28:]
+
+# first round key
+shift = 1
+c1 = c0[shift:] + c0[:shift]
+d1 = d0[shift:] + d0[:shift]
+new_key = c1 + d1
+# ready key for xor right part
+key1 = [int(new_key[pos - 1]) for pos in TABLES["PC2"]]
+
 my_blocks = []
 
 for idx in range(0, len(text), 8):
@@ -126,25 +144,30 @@ for idx in range(0, len(text), 8):
         # my_blocks.append(format(block_to_int, '064b'))
         my_blocks.append([int(block) for block in format(block_to_int, '064b')])
 
-# create key 64 bit
-key = int.from_bytes(os.urandom(7), 'big')
-key_to_bit = format(key, '056b') + format(0, '08b')
-key_bits = [int(b) for b in key_to_bit]
-
-key_to_pc1 = [key_to_bit[pos - 1] for pos in TABLES["PC"]]
-c0 = key_to_pc1[:28]
-d0 = key_to_pc1[28:]
-
-# first round
-shift = 1
-c1 = c0[shift:] + c0[:shift]
-d1 = d0[shift:] + d0[:shift]
-new_key = c1 + d1
-# ready key for xor right part
-key1 = [new_key[pos - 1] for pos in TABLES["PC2"]]
-
 
 first_shift = [[block[pos - 1] for pos in TABLES["IP"]] for block in my_blocks]
 
 
+# first round block
+new_blocks = []
+for block in first_shift:
+    Li_1 = block[:32]
+    Ri_1 = block[32:]
+
+    R_by_e = [Ri_1[pos - 1] for pos in TABLES["E"]]
+    fi = [r ^ k for r, k in zip(R_by_e, key1)]
+
+    sbox_input = [fi[i:i+6] for i in range(0, 48, 6)]
+    sbox_output = []
+    for idx, bits in enumerate(sbox_input):
+        row = int(str(bits[0]) + str(bits[5]), 2)
+        col = int("".join(map(str,bits[1:5])), 2)
+        val = TABLES["S"][idx + 1][row][col]
+        sbox_output.extend([int(bit) for bit in format(val, '04b')])
+
+    fi_by_P = [sbox_output[pos - 1] for pos in TABLES["P"]]
+
+    Li = Ri_1
+    Ri = [r ^ k for r, k in zip(Li_1, fi_by_P)]
+    new_blocks.append(Li + Ri)
 
