@@ -206,16 +206,18 @@ def encrypt(text: str, key: list[int]):
     d0 = key_to_pc1[28:]
 
     shift = 0
-    encrypted_blocks = None
+    encrypted_blocks = first_shift
     for round in range(16):
         shift += TABLES["SHIFTS_KEY"][round]
-        print(shift)
         key_i = get_key_round(c0=c0, d0=d0, shift=shift)
 
-        # first round block
         encrypted_blocks = get_blocks_round(encrypted_blocks,key_i)
 
-    return encrypted_blocks
+    encrypted_blocks_final = last_shift(encrypted_blocks=encrypted_blocks)
+
+    return "".join(encrypted_blocks_final)
+
+
 
 
 
