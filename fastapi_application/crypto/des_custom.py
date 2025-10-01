@@ -182,6 +182,20 @@ def get_blocks_round(first_shift, key_i):
     return new_blocks
 
 
+def last_shift(encrypted_blocks: list[list[int]]) -> list[str]:
+    encrypted_blocks_final = []
+    for block in encrypted_blocks:
+        revert_block = block[32:] + block[:32]
+        block_to_ip_1 = [revert_block[pos - 1] for pos in TABLES["IP_1"]]
+
+        block_int = int("".join(map(str, block_to_ip_1)), 2)
+        block_hex = f"{block_int:016x}"
+
+        encrypted_blocks_final.append(block_hex)
+
+    return encrypted_blocks_final
+
+
 def encrypt(text: str, key: list[int]):
     bit_blocks = text_to_bit_blocks(text=text)
 
