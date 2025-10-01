@@ -133,12 +133,12 @@ def text_to_bit_blocks(text: str) -> list[list[int]]:
     for idx in range(0, len(encoded_text), 8):
         block = encoded_text[idx:idx + 8]
         if len(block) == 8:
-            block_to_int = int.from_bytes(encoded_text)
+            block_to_int = int.from_bytes(block)
             bit_blocks.append([int(block) for block in format(block_to_int, '064b')])
         else:
             rest = 8 - len(block)
             block += bytes([rest]) * rest
-            block_to_int = int.from_bytes(encoded_text)
+            block_to_int = int.from_bytes(block)
             bit_blocks.append([int(block) for block in format(block_to_int, '064b')])
 
     return bit_blocks
